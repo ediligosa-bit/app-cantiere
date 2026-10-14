@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Cantiere EDILIGO SA</title>
+    
+    <!-- Percorso corretto del logo per la creazione dell'app -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#0056b3">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { background-color: white; padding: 20px; border-radius: 8px; max-width: 900px; margin: 0 auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        .sezione { background-color: #fcfcfc; border: 1px solid #eee; padding: 15px; margin-top: 15px; border-radius: 5px; }
+        .sezione h3 { margin-top: 0; color: #333; font-size: 16px; border-bottom: 2px solid #0056b3; padding-bottom: 5px;}
+        
+        label { font-weight: bold; display: block; margin-top: 10px; font-size: 14px;}
+        input, select, textarea, button { width: 100%; margin-top: 5px; padding: 10px; box-sizing: border-box; }
+        
+        .fascia-oraria { display: flex; gap: 10px; margin-top: 5px; }
+        .fascia-oraria > div { flex: 1; }
+        
+        .gruppo-affiancato { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
+        .gruppo-affiancato input { flex: 2; margin-top: 0; }
+        .gruppo-affiancato select { flex: 1; margin-top: 0; }
+
+        .btn-principale { background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; font-weight: bold;}
+        .btn-principale:hover { background-color: #004494; }
+        
+        .btn-tabella { margin-top: 0; padding: 5px 10px; font-size: 14px; width: auto; display: inline-block;}
+        .btn-modifica { background-color: #f39c12; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .btn-elimina { background-color: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        
+        .btn-excel { background-color: #217346; color: white; border: none; cursor: pointer; border-radius: 4px; padding: 10px 15px; font-size: 14px; font-weight: bold; width: auto; float: right;}
+        .btn-excel:hover { background-color: #175232; }
+
+        .btn-aggiungi-mat { background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 3px; padding: 8px; font-size: 14px; width: auto; display: inline-block; margin-top: 10px;}
+        
+        #messaggio { margin-top: 15px; font-weight: bold; text-align: center; }
+        
+        .scroll-tabella { overflow-x: auto; clear: both;}
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 900px; font-size: 14px;}
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #0056b3; color: white; text-align: center; }
+        td { text-align: center; }
+        hr { margin-top: 30px; margin-bottom: 20px; border: 0; border-top: 1px solid #eee; }
+        
+        .link-mappa { color: #0056b3; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- QUI ABBIAMO INSERITO IL NOME SEMPLIFICATO "logo.png" -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="logo.png" alt="Logo EDILIGO SA" style="max-width: 250px; height: auto;">
+            <h2 style="margin-top: 10px;">Rapporto Giornaliero</h2>
+        </div>
+        
+        <div class="sezione">
+            <h3>Dati Generali e Presenza</h3>
+            <label>Data e Meteo:</label>
+            <div class="gruppo-affiancato">
+                <input type="date" id="data_rapporto">
+                <select id="meteo">
+                    <option value="">- Meteo -</option>
+                    <option value="☀️ Sole">☀️ Sole</option>
+                    <option value="☁️ Nuvoloso">☁️ Nuvoloso</option>
+                    <option value="🌧️ Pioggia">🌧️ Pioggia</option>
+                </select>
+            </div>
+
+            <label for="cantiere">Nome Cantiere:</label>
+            <input type="text" id="cantiere" placeholder="Es. Via Roma, 10">
+
+            <label for="nome_operaio">Nome Operaio:</label>
+            <select id="nome_operaio">
+                <option value="">-- Seleziona il tuo nome --</option>
+                <option value="Paolo">Paolo</option>
+                <option value="Stefano">Stefano</option>
+                <option value="Carlo">Carlo</option>
+            </select>
+
+            <label>Orari Mattina:</label>
+            <div class="fascia-oraria">
+                <div><small>Inizio</small><input type="time" id="mat_inizio"></div>
+                <div><small>Fine</small><input type="time" id="mat_fine"></div>
+            </div>
+
+            <label>Orari Pomeriggio:</label>
+            <div class="fascia-oraria">
+                <div><small>Inizio</small><input type="time" id="pom_inizio"></div>
+                <div><small>Fine</small><input type="time" id="pom_fine"></div>
+            </div>
+        </div>
+
+        <div class="sezione">
+            <h3>Macchine Operatrici e Materiali</h3>
+            
+            <label for="macchina">Macchina Operatrice utilizzata:</label>
+            <select id="macchina">
+                <option value="">-- Nessuna macchina --</option>
+                <option value="Escavatore">Escavatore</option>
+                <option value="Furgone">Furgone</option>
+            </select>
+
+            <label for="ore_macchina">Ore di utilizzo macchina:</label>
+            <input type="number" id="ore_macchina" placeholder="Es. 4 (lascia vuoto se non usata)">
+            
+            <label for="costo_gasolio">Spesa Gasolio:</label>
+            <div class="gruppo-affiancato">
+                <input type="number" id="costo_gasolio" placeholder="Es. 50 (lascia vuoto se 0)">
+                <select id="valuta_gasolio">
+                    <option value="CHF">CHF</option>
+                    <option value="€">€</option>
+                </select>
+            </div>
+
+            <hr style="margin: 15px 0;">
+
+            <label>Materiali in entrata:</label>
+            <div id="contenitore-materiali"></div>
+            <button type="button" class="btn-aggiungi-mat" onclick="aggiungiRigaMateriale()">+ Aggiungi Materiale</button>
+        </div>
+
+        <div class="sezione">
+            <h3>Lavorazioni</h3>
+            <label for="note">Note sulle lavorazioni svolte:</label>
+            <textarea id="note" rows="3" placeholder="Descrivi il lavoro fatto oggi..."></textarea>
+        </div>
+
+        <button id="bottoneSalva" class="btn-principale" onclick="controllaGPSeSalva()">Salva Rapporto con GPS</button>
+        <p id="messaggio"></p>
+
+        <hr>
+
+        <button onclick="esportaExcelOreDipendenti()" class="btn-excel">📊 Scarica Ore Dipendenti</button>
+        <h2 style="display:inline-block; margin-top:0;">Storico Rapporti</h2>
+        
+        <div class="scroll-tabella">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data <br> Meteo</th>
+                        <th>Cantiere</th>
+                        <th>Operaio</th>
+                        <th>Macchina (Ore) <br> Gasolio</th>
+                        <th>Materiali</th>
+                        <th>Mappa</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabella"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let listaRapportiGlobale = [];
+        let idInModifica = null;
+
+        function impostaDataDiOggi() {
+            document.getElementById('data_rapporto').valueAsDate = new Date();
+        }
+
+        function aggiungiRigaMateriale(quantita = '', unita = 'NR', descrizione = '') {
+            const container = document.getElementById('contenitore-materiali');
+            const riga = document.createElement('div');
+            riga.className = 'gruppo-affiancato riga-materiale';
+            riga.style.marginTop = '10px';
+            
+            riga.innerHTML = `
+                <input type="number" class="mat-quantita" placeholder="Q.tà" value="${quantita}" style="flex: 1; margin:0;">
+                <select class="mat-unita" style="flex: 1.5; margin:0;">
+                    <option value="NR" ${unita==='NR'?'selected':''}>NR</option>
+                    <option value="A CORPO" ${unita==='A CORPO'?'selected':''}>A CORPO</option>
+                    <option value="KG" ${unita==='KG'?'selected':''}>KG</option>
+                    <option value="M3" ${unita==='M3'?'selected':''}>M3</option>
+                    <option value="M2" ${unita==='M2'?'selected':''}>M2</option>
+                    <option value="ML" ${unita==='ML'?'selected':''}>ML</option>
+                </select>
+                <input type="text" class="mat-descrizione" placeholder="Descrizione..." value="${descrizione}" style="flex: 3; margin:0;">
+                <button type="button" class="btn-elimina" style="flex: 0.5; margin:0;" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(riga);
+        }
+
+        async function caricaRapporti() {
+            const risposta = await fetch('http://localhost:3000/lista-rapporti');
+            listaRapportiGlobale = await risposta.json();
+            const corpoTabella = document.getElementById("corpoTabella");
+            corpoTabella.innerHTML = "";
+
+            for (let i = 0; i < listaRapportiGlobale.length; i++) {
+                let rep = listaRapportiGlobale[i];
+                
+                let linkMappa = "N/D";
+                if (rep.latitudine && rep.longitudine) {
+                    linkMappa = `<a href="https://www.google.com/maps/search/?api=1&query=${rep.latitudine},${rep.longitudine}" target="_blank" class="link-mappa">📍 Posizione</a>`;
+                }
+
+                let infoMacchina = "-";
+                if (rep.macchina_operatrice && rep.macchina_operatrice !== "") {
+                    infoMacchina = `<strong>${rep.macchina_operatrice}</strong> (${rep.ore_macchina || 0} ore)`;
+                }
+                if (rep.costo_gasolio && rep.costo_gasolio > 0) {
+                    let testoGasolio = `<br><small>⛽ Gasolio: ${rep.costo_gasolio} ${rep.valuta_gasolio}</small>`;
+                    infoMacchina = (infoMacchina === "-") ? testoGasolio : infoMacchina + testoGasolio;
+                }
+
+                let infoMateriali = "-";
+                if (rep.materiali && rep.materiali !== "") {
+                    try {
+                        let lista = JSON.parse(rep.materiali);
+                        infoMateriali = lista.map(m => `<strong>${m.quantita || '-'} ${m.unita}</strong> di ${m.descrizione}`).join('<br>');
+                    } catch(e) {
+                        infoMateriali = rep.materiali;
+                    }
+                }
+
+                let dataDaMostrare = rep.data_rapporto ? new Date(rep.data_rapporto) : new Date(rep.data_creazione);
+                let meteoDaMostrare = rep.meteo ? `<br><span style="font-size:18px">${rep.meteo}</span>` : "";
+
+                let riga = `
+                    <tr>
+                        <td><strong>${dataDaMostrare.toLocaleDateString('it-IT')}</strong> ${meteoDaMostrare}</td>
+                        <td>${rep.nome_cantiere}</td>
+                        <td>${rep.nome_operaio || 'N/D'}</td>
+                        <td>${infoMacchina}</td>
+                        <td style="text-align: left;">${infoMateriali}</td>
+                        <td>${linkMappa}</td>
+                        <td>
+                            <button class="btn-tabella btn-modifica" onclick="preparaModifica(${i})">Mod.</button>
+                            <button class="btn-tabella btn-elimina" onclick="eliminaRapporto(${rep.id})">Elim.</button>
+                        </td>
+                    </tr>
+                `;
+                corpoTabella.innerHTML += riga;
+            }
+        }
+
+        function controllaGPSeSalva() {
+            const areaMessaggio = document.getElementById("messaggio");
+            if (idInModifica !== null) {
+                inviaDatiAlServer(null, null); 
+                return;
+            }
+            areaMessaggio.style.color = "blue";
+            areaMessaggio.innerText = "Ricerca posizione GPS in corso...";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(posizione) { inviaDatiAlServer(posizione.coords.latitude, posizione.coords.longitude); },
+                    function(errore) {
+                        areaMessaggio.style.color = "red";
+                        areaMessaggio.innerText = "ERRORE: Autorizzare l'uso del GPS per salvare il rapporto!";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 } 
+                );
+            } else {
+                areaMessaggio.style.color = "red";
+                areaMessaggio.innerText = "Il tuo dispositivo non supporta il GPS.";
+            }
+        }
+
+        async function inviaDatiAlServer(latitudine, longitudine) {
+            const areaMessaggio = document.getElementById("messaggio");
+            
+            const dataRapporto = document.getElementById("data_rapporto").value;
+            const meteo = document.getElementById("meteo").value;
+            const nomeCantiere = document.getElementById("cantiere").value;
+            const nomeOperaio = document.getElementById("nome_operaio").value;
+            const matInizio = document.getElementById("mat_inizio").value;
+            const matFine = document.getElementById("mat_fine").value;
+            const pomInizio = document.getElementById("pom_inizio").value;
+            const pomFine = document.getElementById("pom_fine").value;
+            const note = document.getElementById("note").value;
+            const macchina = document.getElementById("macchina").value;
+            let oreMacchina = document.getElementById("ore_macchina").value;
+            let costoGasolio = document.getElementById("costo_gasolio").value;
+            const valutaGasolio = document.getElementById("valuta_gasolio").value;
+
+            let arrayMateriali = [];
+            document.querySelectorAll('.riga-materiale').forEach(riga => {
+                const quantita = riga.querySelector('.mat-quantita').value;
+                const unita = riga.querySelector('.mat-unita').value;
+                const descrizione = riga.querySelector('.mat-descrizione').value;
+                if (descrizione.trim() !== "") {
+                    arrayMateriali.push({ quantita, unita, descrizione });
+                }
+            });
+
+            const materialiImpacchettati = JSON.stringify(arrayMateriali);
+
+            if (macchina === "") oreMacchina = null;
+            if (costoGasolio === "") costoGasolio = null; 
+
+            if(nomeCantiere === "" || nomeOperaio === "" || dataRapporto === "") {
+                areaMessaggio.style.color = "red";
+                areaMessaggio.innerText = "Data, Cantiere e Nome Operaio sono obbligatori!";
+                return;
+            }
+
+            const datiDaSpedire = { 
+                dataRapporto, meteo, nomeCantiere, nomeOperaio, note, 
+                matInizio, matFine, pomInizio, pomFine, macchina, oreMacchina, costoGasolio, valutaGasolio,
+                listaMateriali: materialiImpacchettati,
+                lat: latitudine, lng: longitudine
+            };
+
+            let indirizzoServer = 'http://localhost:3000/salva-rapporto';
+            let metodoSpedizione = 'POST';
+
+            if (idInModifica !== null) {
+                indirizzoServer = 'http://localhost:3000/modifica-rapporto/' + idInModifica;
+                metodoSpedizione = 'PUT';
+            }
+
+            try {
+                const risposta = await fetch(indirizzoServer, {
+                    method: metodoSpedizione,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datiDaSpedire)
+                });
+
+                if (risposta.ok) {
+                    areaMessaggio.style.color = "green";
+                    areaMessaggio.innerText = "Operazione completata con successo!";
+                    
+                    document.querySelectorAll('input:not(#data_rapporto), select#nome_operaio, select#macchina, select#meteo, textarea').forEach(campo => campo.value = '');
+                    document.getElementById("costo_gasolio").value = ''; 
+                    document.getElementById('contenitore-materiali').innerHTML = '';
+                    aggiungiRigaMateriale();
+                    impostaDataDiOggi(); 
+                    idInModifica = null;
+                    document.getElementById("bottoneSalva").innerText = "Salva Rapporto con GPS";
+                    document.getElementById("bottoneSalva").style.backgroundColor = "#0056b3";
+
+                    caricaRapporti();
+                }
+            } catch (errore) {
+                areaMessaggio.style.color = "red";
+                areaMessaggio.innerText = "Errore di connessione al server.";
+            }
+        }
+
+        function preparaModifica(indice) {
+            const rep = listaRapportiGlobale[indice];
+            
+            if(rep.data_rapporto) document.getElementById("data_rapporto").value = new Date(rep.data_rapporto).toISOString().split('T')[0];
+            document.getElementById("meteo").value = rep.meteo || "";
+            document.getElementById("cantiere").value = rep.nome_cantiere || "";
+            document.getElementById("nome_operaio").value = rep.nome_operaio || "";
+            document.getElementById("mat_inizio").value = rep.mattina_inizio || "";
+            document.getElementById("mat_fine").value = rep.mattina_fine || "";
+            document.getElementById("pom_inizio").value = rep.pomeriggio_inizio || "";
+            document.getElementById("pom_fine").value = rep.pomeriggio_fine || "";
+            document.getElementById("note").value = rep.note || "";
+            document.getElementById("macchina").value = rep.macchina_operatrice || "";
+            document.getElementById("ore_macchina").value = rep.ore_macchina || "";
+            document.getElementById("costo_gasolio").value = rep.costo_gasolio || "";
+            if(rep.valuta_gasolio) document.getElementById("valuta_gasolio").value = rep.valuta_gasolio;
+            
+            const contenitore = document.getElementById('contenitore-materiali');
+            contenitore.innerHTML = '';
+            if (rep.materiali && rep.materiali !== "") {
+                try {
+                    let lista = JSON.parse(rep.materiali);
+                    lista.forEach(mat => aggiungiRigaMateriale(mat.quantita, mat.unita, mat.descrizione));
+                } catch(e) {
+                    aggiungiRigaMateriale('', 'NR', rep.materiali);
+                }
+            } else {
+                aggiungiRigaMateriale();
+            }
+
+            idInModifica = rep.id;
+            const bottone = document.getElementById("bottoneSalva");
+            bottone.innerText = "Aggiorna Rapporto (GPS non modificato)";
+            bottone.style.backgroundColor = "#f39c12";
+            window.scrollTo(0, 0); 
+        }
+
+        async function eliminaRapporto(id) {
+            if (confirm("Vuoi davvero eliminare questo rapporto?")) {
+                await fetch('http://localhost:3000/elimina-rapporto/' + id, { method: 'DELETE' });
+                caricaRapporti(); 
+            }
+        }
+
+        function esportaExcelOreDipendenti() {
+            let raggruppamento = {};
+
+            listaRapportiGlobale.forEach(rep => {
+                let nome = rep.nome_operaio;
+                if (!nome) return; 
+
+                if (!raggruppamento[nome]) {
+                    raggruppamento[nome] = { righe: [], totaleOre: 0 };
+                }
+
+                function calcolaDifferenzaOre(orarioInizio, orarioFine) {
+                    if (!orarioInizio || !orarioFine) return 0;
+                    let [hInizio, mInizio] = orarioInizio.split(':').map(Number);
+                    let [hFine, mFine] = orarioFine.split(':').map(Number);
+                    
+                    let oreCalcolate = (hFine + (mFine / 60)) - (hInizio + (mInizio / 60));
+                    return oreCalcolate > 0 ? oreCalcolate : 0;
+                }
+
+                let oreMattina = calcolaDifferenzaOre(rep.mattina_inizio, rep.mattina_fine);
+                let orePomeriggio = calcolaDifferenzaOre(rep.pomeriggio_inizio, rep.pomeriggio_fine);
+                let oreTotaliGiornata = oreMattina + orePomeriggio;
+
+                let dataFormattata = rep.data_rapporto ? new Date(rep.data_rapporto).toLocaleDateString('it-IT') : new Date(rep.data_creazione).toLocaleDateString('it-IT');
+
+                raggruppamento[nome].righe.push({
+                    "Data": dataFormattata,
+                    "Cantiere": rep.nome_cantiere,
+                    "Ore Realizzate": oreTotaliGiornata.toFixed(2) 
+                });
+
+                raggruppamento[nome].totaleOre += oreTotaliGiornata;
+            });
+
+            const cartellaLavoro = XLSX.utils.book_new();
+
+            for (const [nomeOperaio, datiDipendente] of Object.entries(raggruppamento)) {
+                
+                datiDipendente.righe.push({ "Data": "", "Cantiere": "", "Ore Realizzate": "" });
+                
+                datiDipendente.righe.push({
+                    "Data": "TOTALE ORE",
+                    "Cantiere": "",
+                    "Ore Realizzate": datiDipendente.totaleOre.toFixed(2)
+                });
+
+                const foglio = XLSX.utils.json_to_sheet(datiDipendente.righe);
+                XLSX.utils.book_append_sheet(cartellaLavoro, foglio, nomeOperaio);
+            }
+
+            if (Object.keys(raggruppamento).length === 0) {
+                alert("Nessun dato da esportare.");
+                return;
+            }
+
+            XLSX.writeFile(cartellaLavoro, "Ore_Dipendenti_EDILIGO.xlsx");
+        }
+
+        window.onload = function() {
+            impostaDataDiOggi(); 
+            aggiungiRigaMateriale();
+            caricaRapporti();    
+        };
+    </script>
+</body>
+</html>
