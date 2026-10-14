@@ -9,11 +9,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// ECCO LA RIGA NUOVA: Dice al server di mostrare pubblicamente i file come index.html e logo.png
+app.use(express.static(__dirname));
+
 // ==========================================
 // COLLEGAMENTO AL DATABASE (PRONTO PER INTERNET)
 // ==========================================
 const pool = new Pool({
-    // Questa riga ora capisce se sei sul tuo computer o su internet
     connectionString: process.env.DATABASE_URL || 'postgresql://postgres:maicol@localhost:5432/cantiere_db',
     ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
@@ -93,7 +95,6 @@ app.put('/modifica-rapporto/:id', async (req, res) => {
 // ==========================================
 // ACCENSIONE DEL SERVER (PRONTA PER INTERNET)
 // ==========================================
-// Questa è la parte che abbiamo modificato! Si trova sempre alla fine del file.
 const PORTA = process.env.PORT || 3000;
 app.listen(PORTA, () => {
     console.log(`Server ACCESO e in ascolto sulla porta ${PORTA}...`);
